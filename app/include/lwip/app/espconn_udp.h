@@ -43,7 +43,7 @@ extern sint8 espconn_udp_server(struct espconn *espconn);
  * Returns      : none
 *******************************************************************************/
 
-extern void espconn_udp_sent(void *arg, uint8 *psent, uint16 length);
+extern uint16 espconn_udp_sent(void *arg, uint8 *psent, uint16 length);
 
 
 #endif /* __ESPCONN_UDP_H__ */

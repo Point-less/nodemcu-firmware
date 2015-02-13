@@ -261,10 +261,12 @@ espconn_create(struct espconn *espconn)
  * Returns      : none
 *******************************************************************************/
 sint8 ICACHE_FLASH_ATTR
-espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length)
+espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length, uint16 *amount_sent)
 {
-	espconn_msg *pnode = NULL;
-	bool value = false;
+    espconn_msg *pnode = NULL;
+    bool value = false;
+    u16_t len = 0;
+
     if (espconn == NULL) {
         return ESPCONN_ARG;
     }
@@ -274,14 +276,14 @@ espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length)
         case ESPCONN_TCP:
             // if (value && (pnode->pcommon.write_len == pnode->pcommon.write_total)){
         	if (value && (pnode->pcommon.cntr == 0)){
-           		espconn_tcp_sent(pnode, psent, length);
+           		len = espconn_tcp_sent(pnode, psent, length);
             }else
             	return ESPCONN_ARG;
             break;
 
         case ESPCONN_UDP: {
         	if (value)
-        		espconn_udp_sent(pnode, psent, length);
+        		len = espconn_udp_sent(pnode, psent, length);
         	else
         		return ESPCONN_ARG;
             break;
@@ -290,6 +292,8 @@ espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length)
         default :
             break;
     }
+
+    *amount_sent = len;
     return ESPCONN_OK;
 }
 

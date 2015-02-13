@@ -218,7 +218,7 @@ sint8 espconn_regist_sentcb(struct espconn *espconn, espconn_sent_callback sent_
  * Returns      : none
 *******************************************************************************/
 
-sint8 espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length);
+sint8 espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length, uint16 *amount_sent);
 
 /******************************************************************************
  * FunctionName : espconn_regist_connectcb

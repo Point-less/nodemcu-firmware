@@ -214,6 +214,7 @@ LOCAL void ICACHE_FLASH_ATTR
 upgrade_connect_cb(void *arg)
 {
     struct espconn *pespconn = arg;
+    uint16 amount_sent;
 
     UPGRADE_DBG("upgrade_connect_cb\n");
     os_timer_disarm(&upgrade_10s);
@@ -224,9 +225,9 @@ upgrade_connect_cb(void *arg)
     if (pbuf != NULL) {
         UPGRADE_DBG("%s\n", pbuf);
 #ifdef UPGRADE_SSL_ENABLE
-        espconn_secure_sent(pespconn, pbuf, os_strlen(pbuf));
+        espconn_secure_sent(pespconn, pbuf, os_strlen(pbuf), &amount_sent);
 #else
-        espconn_sent(pespconn, pbuf, os_strlen(pbuf));
+        espconn_sent(pespconn, pbuf, os_strlen(pbuf), &amount_sent);
 #endif
     }
 }

@@ -994,6 +994,7 @@ static int net_send( lua_State* L, const char* mt )
   struct espconn *pesp_conn = NULL;
   lnet_userdata *nud;
   size_t l;
+  uint16 amount_sent;
   
   nud = (lnet_userdata *)luaL_checkudata(L, 1, mt);
   luaL_argcheck(L, nud, 1, "Server/Socket expected");
@@ -1033,6 +1034,7 @@ static int net_send( lua_State* L, const char* mt )
 #endif
 
   const char *payload = luaL_checklstring( L, 2, &l );
+
   if (l>1460 || payload == NULL)
     return luaL_error( L, "need <1460 payload" );
 
@@ -1043,13 +1045,16 @@ static int net_send( lua_State* L, const char* mt )
     nud->cb_send_ref = luaL_ref(L, LUA_REGISTRYINDEX);
   }
 #ifdef CLIENT_SSL_ENABLE
-  if(nud->secure)
+  if(nud->secure) {
     espconn_secure_sent(pesp_conn, (unsigned char *)payload, l);
+    amount_sent = l;
+  }
   else
 #endif
-    espconn_sent(pesp_conn, (unsigned char *)payload, l);
+    espconn_sent(pesp_conn, (unsigned char *)payload, l, &amount_sent);
 
-  return 0;  
+  lua_pushinteger( L, amount_sent);
+  return 1;
 }
 
 // Lua: socket:dns( string, function(socket, ip) )

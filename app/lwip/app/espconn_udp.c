@@ -59,7 +59,7 @@ static void ICACHE_FLASH_ATTR espconn_data_sent(void *arg)
  *                uint16 length -- Length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
+uint16 ICACHE_FLASH_ATTR
 espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
 {
     espconn_msg *pudp_sent = arg;
@@ -119,6 +119,8 @@ espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
         pudp_sent->pcommon.cntr = length - datalen;
         espconn_data_sent(pudp_sent);
     }
+
+    return length;
 }
 
 /******************************************************************************

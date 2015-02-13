@@ -155,6 +155,7 @@ static void mqtt_socket_received(void *arg, char *pdata, unsigned short len)
   uint8_t msg_type;
   uint8_t msg_qos;
   uint16_t msg_id;
+  uint16 amount_sent;
 
   struct espconn *pesp_conn = arg;
   if(pesp_conn == NULL)
@@ -295,7 +296,7 @@ READPACKET:
     if(mud->secure)
       espconn_secure_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
     else
-      espconn_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
+      espconn_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length, &amount_sent);
     mud->mqtt_state.outbound_message = NULL;
   }
   return;
@@ -330,6 +331,7 @@ static void mqtt_socket_connected(void *arg)
 {
   NODE_DBG("mqtt_socket_connected is called.\n");
   struct espconn *pesp_conn = arg;
+  uint16 amount_sent;
   if(pesp_conn == NULL)
     return;
   lmqtt_userdata *mud = (lmqtt_userdata *)pesp_conn->reverse;
@@ -349,7 +351,7 @@ static void mqtt_socket_connected(void *arg)
   }
   else
   {
-    espconn_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
+    espconn_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length, &amount_sent);
   }
   mud->mqtt_state.outbound_message = NULL;
   mud->connState = MQTT_CONNECT_SENDING;
@@ -359,6 +361,7 @@ static void mqtt_socket_connected(void *arg)
 void mqtt_socket_timer(void *arg)
 {
   lmqtt_userdata *mud = (lmqtt_userdata*) arg;
+  uint16 amount_sent;
 
   if(mud->connState == MQTT_DATA){
     mud->keep_alive_tick ++;
@@ -371,7 +374,7 @@ void mqtt_socket_timer(void *arg)
       if(mud->secure)
         espconn_secure_sent(mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
       else
-        espconn_sent(mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
+        espconn_sent(mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length, &amount_sent);
       mud->keep_alive_tick = 0;
     }
   }
@@ -906,6 +909,7 @@ static int mqtt_socket_subscribe( lua_State* L ) {
 		struct SUB_STORAGE *next;
 	} SUB_STORAGE;
 
+	uint16 amount_sent;
 	uint8_t stack = 1, qos = 0;
 	const char *topic;
 	size_t il;
@@ -998,9 +1002,9 @@ static int mqtt_socket_subscribe( lua_State* L ) {
 	}
 	NODE_DBG("Sent: %d\n", mud->mqtt_state.outbound_message->length);
 	if( mud->secure )
-		espconn_secure_sent( mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length );
+		espconn_secure_sent( mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
 	else
-		espconn_sent( mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length );
+		espconn_sent( mud->pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length, &amount_sent);
 
 	return 0;
 }
@@ -1013,6 +1017,7 @@ static int mqtt_socket_publish( lua_State* L )
   lmqtt_userdata *mud;
   size_t l;
   uint8_t stack = 1;
+  uint16 amount_sent;
   mud = (lmqtt_userdata *)luaL_checkudata(L, stack, "mqtt.socket");
   luaL_argcheck(L, mud, stack, "mqtt.socket expected");
   stack++;
@@ -1068,7 +1073,7 @@ static int mqtt_socket_publish( lua_State* L )
   if(mud->secure)
     espconn_secure_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
   else
-    espconn_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length);
+    espconn_sent(pesp_conn, mud->mqtt_state.outbound_message->data, mud->mqtt_state.outbound_message->length, &amount_sent);
   mud->mqtt_state.outbound_message = NULL;
   return 0;
 }

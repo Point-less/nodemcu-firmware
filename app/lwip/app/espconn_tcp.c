@@ -148,12 +148,12 @@ espconn_tcp_disconnect_successful(void *arg)
  *                uint16 length -- Length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
+uint16 ICACHE_FLASH_ATTR
 espconn_tcp_sent(void *arg, uint8 *psent, uint16 length)
 {
-	espconn_msg *ptcp_sent = arg;
+    espconn_msg *ptcp_sent = arg;
     struct tcp_pcb *pcb = NULL;
-    err_t err = 0;
+    err_t err = NULL;
     u16_t len = 0;
     u8_t data_to_send = false;
 
@@ -175,28 +175,32 @@ espconn_tcp_sent(void *arg, uint8 *psent, uint16 length)
         len = 2*pcb->mss;
     }
 
-    do {
+    err = tcp_write(pcb, psent, len, 0);
+    while ((len > 0) && (err == ERR_MEM)) {
     	espconn_printf("espconn_tcp_sent writing %d bytes %p\n", len, pcb);
         err = tcp_write(pcb, psent, len, 0);
 
-        if (err == ERR_MEM) {
-            len /= 2;
-        }
-    } while (err == ERR_MEM && len > 1);
+        len /= 2;
+    }
 
     if (err == ERR_OK) {
         data_to_send = true;
+        /*
+         * Internal management of remainder disabled
         ptcp_sent->pcommon.ptrbuf = psent + len;
         ptcp_sent->pcommon.cntr = length - len;
         ptcp_sent->pcommon.write_len += len;
+        */
         espconn_printf("espconn_tcp_sent sending %d bytes, remain %d\n", len, ptcp_sent->pcommon.cntr);
     }
 
     if (data_to_send == true) {
         err = tcp_output(pcb);
     } else {
-    	ptcp_sent->pespconn ->state = ESPCONN_CLOSE;
+    	ptcp_sent->pespconn->state = ESPCONN_CLOSE;
     }
+
+    return len;
 }
 
 /******************************************************************************

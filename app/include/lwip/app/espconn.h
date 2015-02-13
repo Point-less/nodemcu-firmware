@@ -292,7 +292,7 @@ extern sint8 espconn_regist_sentcb(struct espconn *espconn, espconn_sent_callbac
  * Returns      : none
 *******************************************************************************/
 
-extern sint8 espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length);
+extern sint8 espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length, uint16 *amount_sent);
 
 /******************************************************************************
  * FunctionName : espconn_regist_connectcb
